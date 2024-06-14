@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from unittest import TestCase
 
 from booking_scheduler import BookingScheduler
+from communication_test import TestableSmsSender
 from schedule import Customer, Schedule
 
 NOT_ON_HOUR = datetime.strptime("1993-05-16 09:18", "%Y-%m-%d %H:%M")
@@ -51,7 +52,13 @@ class TestBookingScheduler(TestCase):
 
 
     def test_예약완료시_SMS는_무조건_발송(self):
-        pass
+        sms_sender_mk = TestableSmsSender()
+        self.booking_scheduler.set_sms_sender(sms_sender_mk)
+
+        schedule = Schedule(ON_THE_HOUR, UNDER_CAPA, CUSTOMER)
+        self.booking_scheduler.add_schedule(schedule)
+
+        self.assertTrue(sms_sender_mk.is_send_method_called())
 
     def test_이메일이_없는_경우에는_이메일_미발송(self):
         pass
