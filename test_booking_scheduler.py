@@ -1,13 +1,16 @@
 import unittest
 from datetime import datetime, timedelta
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from booking_scheduler import BookingScheduler
 from schedule import Schedule
 
 NOT_ON_HOUR = datetime.strptime("1993-05-16 09:18", "%Y-%m-%d %H:%M")
-ON_THE_HOUR = datetime.strptime("2022-09-18 19:00", "%Y-%m-%d %H:%M")
+ON_THE_HOUR = datetime.strptime("2008-09-18 16:00", "%Y-%m-%d %H:%M")
+
+SATURDAY_GOLDEN_HOUR = datetime.strptime("2022-09-17 19:00", "%Y-%m-%d %H:%M")
+SUNDAY_GOLDEN_HOUR = datetime.strptime("2022-09-18 19:00", "%Y-%m-%d %H:%M")
 
 CUSTOMER_WITHOUT_MAIL = Mock()
 CUSTOMER_WITHOUT_MAIL.get_email.return_value = None
@@ -17,15 +20,6 @@ CUSTOMER_WITH_MAIL.get_email.return_value = "hello@world.com"
 
 UNDER_CAPA = 1
 CAPA_PER_HOUR = 3
-
-
-class TestableBookingScheduler(BookingScheduler):
-    def __init__(self, capacity_per_hour, date_time: str):
-        super().__init__(capacity_per_hour)
-        self._datetime = date_time
-
-    def get_now(self):
-        return datetime.strptime(self._datetime, "%Y-%m-%d %H:%M")
 
 
 class TestBookingScheduler(TestCase):
@@ -87,17 +81,15 @@ class TestBookingScheduler(TestCase):
 
         self.mail_sender.send_mail.assert_called()
 
-    def test_현재날짜가_일요일인_경우_예약불가_예외처리(self):
-        self.booking_scheduler = TestableBookingScheduler(CAPA_PER_HOUR, "2022-09-18 19:00")
-
+    @patch.object(BookingScheduler, 'get_now', return_value=SUNDAY_GOLDEN_HOUR)
+    def test_현재날짜가_일요일인_경우_예약불가_예외처리(self, mock):
         schedule = Schedule(ON_THE_HOUR, UNDER_CAPA, CUSTOMER_WITHOUT_MAIL)
 
         with self.assertRaises(ValueError):
             self.booking_scheduler.add_schedule(schedule)
 
-    def test_현재날짜가_일요일이_아닌경우_예약가능(self):
-        self.booking_scheduler = TestableBookingScheduler(CAPA_PER_HOUR, "2022-09-17 19:00")
-
+    @patch.object(BookingScheduler, 'get_now', return_value=SATURDAY_GOLDEN_HOUR)
+    def test_현재날짜가_일요일이_아닌경우_예약가능(self, mock):
         schedule = Schedule(ON_THE_HOUR, UNDER_CAPA, CUSTOMER_WITHOUT_MAIL)
         self.booking_scheduler.add_schedule(schedule)
 
