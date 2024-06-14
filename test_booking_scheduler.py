@@ -4,26 +4,30 @@ from unittest import TestCase
 from booking_scheduler import BookingScheduler
 from schedule import Customer, Schedule
 
+NOT_ON_HOUR = datetime.strptime("1993-05-16 09:18", "%Y-%m-%d %H:%M")
+ON_THE_HOUR = datetime.strptime("2022-09-17 19:00", "%Y-%m-%d %H:%M")
+CUSTOMER = Customer("fake name", "010-1234-5678")
+
+UNDER_CAPA = 1
+CAPA_PER_HOUR = 3
+
 
 class TestBookingScheduler(TestCase):
+    def setUp(self):
+        self.booking_scheduler = BookingScheduler(CAPA_PER_HOUR)
+
     def test_예약은_정시에만_가능하다_정시가_아닌경우_예약불가(self):
-        datetime_not_on_hour = datetime.strptime("1993-05-16 09:18", "%Y-%m-%d %H:%M")
-        customer = Customer("fake name", "010-1234-5678")
-        schedule = Schedule(datetime_not_on_hour, 1, customer)
-        booking_scheduler = BookingScheduler(3)
+        schedule = Schedule(NOT_ON_HOUR, UNDER_CAPA, CUSTOMER)
 
         with self.assertRaises(ValueError):
-            booking_scheduler.add_schedule(schedule)
+            self.booking_scheduler.add_schedule(schedule)
 
     def test_예약은_정시에만_가능하다_정시인_경우_예약가능(self):
-        datetime_on_hour = datetime.strptime("1993-05-16 19:00", "%Y-%m-%d %H:%M")
-        customer = Customer("fake name", "010-1234-5678")
-        schedule = Schedule(datetime_on_hour, 1, customer)
-        booking_scheduler = BookingScheduler(3)
+        schedule = Schedule(ON_THE_HOUR, UNDER_CAPA, CUSTOMER)
 
-        booking_scheduler.add_schedule(schedule)
+        self.booking_scheduler.add_schedule(schedule)
 
-        self.assertTrue(booking_scheduler.has_schedule(schedule))
+        self.assertTrue(self.booking_scheduler.has_schedule(schedule))
 
     def test_시간대별_인원제한이_있다_같은_시간대에_Capacity_초과할_경우_예외발생(self):
         pass
