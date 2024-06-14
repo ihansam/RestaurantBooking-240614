@@ -68,7 +68,14 @@ class TestBookingScheduler(TestCase):
         self.assertEqual(0, testable_mail_sender.get_count_send_mail_is_called())
 
     def test_이메일이_있는_경우에는_이메일_발송(self):
-        pass
+        customer_with_email = Customer("Fake Name", "010-1234-5678", "hello.world@com")
+        testable_mail_sender = TestableMailSender()
+        self.booking_scheduler.set_mail_sender(testable_mail_sender)
+
+        schedule = Schedule(ON_THE_HOUR, UNDER_CAPA, customer=customer_with_email)
+        self.booking_scheduler.add_schedule(schedule)
+
+        self.assertEqual(1, testable_mail_sender.get_count_send_mail_is_called())
 
     def test_현재날짜가_일요일인_경우_예약불가_예외처리(self):
         pass
