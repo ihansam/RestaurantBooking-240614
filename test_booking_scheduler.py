@@ -16,6 +16,8 @@ CAPA_PER_HOUR = 3
 class TestBookingScheduler(TestCase):
     def setUp(self):
         self.booking_scheduler = BookingScheduler(CAPA_PER_HOUR)
+        self.testable_sms_sender = TestableSmsSender()
+        self.booking_scheduler.set_sms_sender(self.testable_sms_sender)
 
     def test_예약은_정시에만_가능하다_정시가_아닌경우_예약불가(self):
         schedule = Schedule(NOT_ON_HOUR, UNDER_CAPA, CUSTOMER)
@@ -50,15 +52,11 @@ class TestBookingScheduler(TestCase):
 
         self.assertTrue(self.booking_scheduler.has_schedule(another_schedule))
 
-
     def test_예약완료시_SMS는_무조건_발송(self):
-        sms_sender_mk = TestableSmsSender()
-        self.booking_scheduler.set_sms_sender(sms_sender_mk)
-
         schedule = Schedule(ON_THE_HOUR, UNDER_CAPA, CUSTOMER)
         self.booking_scheduler.add_schedule(schedule)
 
-        self.assertTrue(sms_sender_mk.is_send_method_called())
+        self.assertTrue(self.testable_sms_sender.is_send_method_called())
 
     def test_이메일이_없는_경우에는_이메일_미발송(self):
         pass
